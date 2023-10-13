@@ -258,48 +258,28 @@ class Lock2 implements Tile {
 }
 
 interface Input {
-  isRight(): boolean;
-  isLeft(): boolean;
-  isUp(): boolean;
-  isDown(): boolean;
   handle(): void;
 }
 
 class Right implements Input {
-  isRight() { return true; }
-  isLeft() { return false; }
-  isUp() { return false; }
-  isDown() { return false; }
   handle() {
     map[playery][playerx + 1].moveHorizontal(1);
   }
 }
 
 class Left implements Input {
-  isRight() { return false; }
-  isLeft() { return true; }
-  isUp() { return false; }
-  isDown() { return false; }
   handle() {
     map[playery][playerx -1].moveHorizontal(-1);
   }
 }
 
 class Up implements Input {
-  isRight() { return false; }
-  isLeft() { return false; }
-  isUp() { return true; }
-  isDown() { return false; }
   handle() {
     map[playery -1][playerx].moveVertical(-1);
   }
 }
 
 class Down implements Input {
-  isRight() { return false; }
-  isLeft() { return false; }
-  isUp() { return false; }
-  isDown() { return true; }
   handle() {
     map[playery + 1][playerx].moveVertical(1);
   }
