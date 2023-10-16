@@ -14,6 +14,31 @@ enum RawTile {
   KEY2, LOCK2
 }
 
+interface FallingState {
+  isFalling(): boolean
+  moveHorizontal(dx: number): void;
+}
+
+class Falling implements FallingState {
+  isFalling(): boolean {
+      return true;
+  }
+  moveHorizontal(dx: number) { }
+}
+
+class Resting implements FallingState {
+  isFalling(): boolean {
+      return false;
+  }
+  moveHorizontal(dx: number) {
+    if (map[playery][playerx + dx + dx].isAir()
+      && !map[playery + 1][playerx + dx].isAir()) {
+      map[playery][playerx + dx + dx] = map[playery][playerx + dx];
+      moveToTile(playerx + dx, playery);
+    }
+  }
+}
+
 interface Tile {
   isAir(): boolean;
   isFallingStone(): boolean;
@@ -25,6 +50,9 @@ interface Tile {
   moveVertical(dy: number): void;
   isStoney(): boolean;
   isBoxy(): boolean;
+  drop(): void;
+  rest(): void;
+  isFalling(): boolean;
 }
 
 class Air implements Tile {
@@ -50,6 +78,11 @@ class Air implements Tile {
       return false;
   }
   isBoxy(): boolean {
+      return false;
+  }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
       return false;
   }
 }
@@ -82,6 +115,11 @@ class Flux implements Tile {
   isBoxy(): boolean {
       return false;
   }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
+      return false;
+  }
 }
 
 class Unbreakable implements Tile {
@@ -102,6 +140,11 @@ class Unbreakable implements Tile {
   isBoxy(): boolean {
       return false;
   }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
+      return false;
+  }
 }
 
 class Player implements Tile {
@@ -119,30 +162,10 @@ class Player implements Tile {
   isBoxy(): boolean {
       return false;
   }
-}
-
-interface FallingState {
-  isFalling(): boolean
-  moveHorizontal(dx: number): void;
-}
-
-class Falling implements FallingState {
-  isFalling(): boolean {
-      return true;
-  }
-  moveHorizontal(dx: number) { }
-}
-
-class Resting implements FallingState {
+  drop() { }
+  rest() { }
   isFalling(): boolean {
       return false;
-  }
-  moveHorizontal(dx: number) {
-    if (map[playery][playerx + dx + dx].isAir()
-      && !map[playery + 1][playerx + dx].isAir()) {
-      map[playery][playerx + dx + dx] = map[playery][playerx + dx];
-      moveToTile(playerx + dx, playery);
-    }
   }
 }
 
@@ -169,6 +192,15 @@ class Stone implements Tile {
   isBoxy(): boolean {
       return false;
   }
+  drop() {
+    this.falling = new Falling()
+  }
+  rest() {
+    this.falling = new Resting()
+  }
+  isFalling(): boolean {
+      return this.isFallingStone();
+  }
 }
 
 class Box implements Tile {
@@ -193,6 +225,15 @@ class Box implements Tile {
   }
   isBoxy(): boolean {
       return true;
+  }
+  drop() {
+    this.falling = new Falling()
+  }
+  rest() {
+    this.falling = new Resting()
+  }
+  isFalling(): boolean {
+      return this.isFallingBox();
   }
 }
 
@@ -220,6 +261,11 @@ class Key1 implements Tile {
   isBoxy(): boolean {
       return false;
   }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
+      return false;
+  }
 }
 
 class Lock1 implements Tile {
@@ -238,6 +284,11 @@ class Lock1 implements Tile {
       return false;
   }
   isBoxy(): boolean {
+      return false;
+  }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
       return false;
   }
 }
@@ -266,6 +317,11 @@ class Key2 implements Tile {
   isBoxy(): boolean {
       return false;
   }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
+      return false;
+  }
 }
 
 class Lock2 implements Tile {
@@ -284,6 +340,11 @@ class Lock2 implements Tile {
       return false;
   }
   isBoxy(): boolean {
+      return false;
+  }
+  drop() { }
+  rest() { }
+  isFalling(): boolean {
       return false;
   }
 }
@@ -407,17 +468,15 @@ function updateMap() {
 
 function updateTile(x: number, y: number) {
   if (map[y][x].isStoney()
-    && map[y + 1][x].isAir()) {
+      && map[y + 1][x].isAir()) {
     map[y + 1][x] = new Stone(new Falling());
     map[y][x] = new Air();
   } else if (map[y][x].isBoxy()
-    && map[y + 1][x].isAir()) {
+      && map[y + 1][x].isAir()) {
     map[y + 1][x] = new Box(new Falling());
     map[y][x] = new Air();
-  } else if (map[y][x].isFallingStone()) {
-    map[y][x] = new Stone(new Resting());
-  } else if (map[y][x].isFallingBox()) {
-    map[y][x] = new Box(new Resting());
+  } else if (map[y][x].isFalling()) {
+    map[y][x].rest();
   }
 }
 
