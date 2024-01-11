@@ -327,7 +327,7 @@ class Player {
 
 class Map {
 	private map: Tile[][];
-	transform() {
+	constructor() {
 		this.map = new Array(rawMap.length);
 		for (let y = 0; y < rawMap.length; y++) {
 			this.map[y] = new Array(rawMap[y].length);
@@ -461,7 +461,6 @@ function gameLoop(map: Map) {
 }
 
 window.onload = () => {
-	map.transform();
 	gameLoop(map);
 }
 
