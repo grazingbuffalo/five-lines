@@ -3,16 +3,102 @@ const TILE_SIZE = 30;
 const FPS = 30;
 const SLEEP = 1000 / FPS;
 
-enum RawTile {
-	AIR,
-	FLUX,
-	UNBREAKABLE,
-	PLAYER,
-	STONE, FALLING_STONE,
-	BOX, FALLING_BOX,
-	KEY1, LOCK1,
-	KEY2, LOCK2
+interface RawTileValue {
+	transform(): Tile;
 }
+
+class AirValue implements RawTileValue {
+	transform(): Tile {
+		return new Air();
+	}
+}
+class PlayerValue implements RawTileValue {
+	transform(): Tile {
+		return new PlayerTile();
+	}
+}
+class UnbreakableValue implements RawTileValue {
+	transform(): Tile {
+		return new Unbreakable();
+	}
+}
+class StoneValue implements RawTileValue {
+	transform(): Tile {
+		return new Stone(new Resting());
+	}
+}
+class FallingStoneValue implements RawTileValue {
+	transform(): Tile {
+		return new Stone(new Falling());
+	}
+}
+class BoxValue implements RawTileValue {
+	transform(): Tile {
+		return new Box(new Resting());
+	}
+}
+class FallingBoxValue implements RawTileValue {
+	transform(): Tile {
+		return new Box(new Falling());
+	}
+}
+class FluxValue implements RawTileValue {
+	transform(): Tile {
+		return new Flux();
+	}
+}
+class Key1Value implements RawTileValue {
+	transform(): Tile {
+		return new GameKey(YELLOW_KEY);
+	}
+}
+class Lock1Value implements RawTileValue {
+	transform(): Tile {
+		return new GameLock(YELLOW_KEY);
+	}
+}
+class Key2Value implements RawTileValue {
+	transform(): Tile {
+		return new GameKey(BlUE_KEY);
+	}
+}
+class Lock2Value implements RawTileValue {
+	transform(): Tile {
+		return new GameLock(BlUE_KEY);
+	}
+}
+
+class RawTile {
+	static readonly AIR = new RawTile(new AirValue());
+	static readonly PLAYER = new RawTile(new PlayerValue());
+	static readonly UNBREAKABLE = new RawTile(new UnbreakableValue());
+	static readonly STONE = new RawTile(new StoneValue());
+	static readonly FALLING_STONE = new RawTile(new FallingStoneValue());
+	static readonly BOX = new RawTile(new BoxValue());
+	static readonly FALLING_BOX = new RawTile(new FallingBoxValue());
+	static readonly FLUX = new RawTile(new FluxValue());
+	static readonly KEY1 = new RawTile(new Key1Value());
+	static readonly LOCK1 = new RawTile(new Lock1Value());
+	static readonly KEY2 = new RawTile(new Key2Value());
+	static readonly LOCK2 = new RawTile(new Lock2Value());
+
+	private constructor(private value: RawTileValue) { }
+
+	transform() {
+		return this.value.transform();
+	}
+}
+
+const RAW_TILES = [
+	RawTile.AIR,
+	RawTile.FLUX,
+	RawTile.UNBREAKABLE,
+	RawTile.PLAYER,
+	RawTile.STONE, RawTile.FALLING_STONE,
+	RawTile.BOX, RawTile.FALLING_BOX,
+	RawTile.KEY1, RawTile.LOCK1,
+	RawTile.KEY2, RawTile.LOCK2
+];
 
 interface FallingState {
 	isFalling(): boolean
@@ -332,7 +418,7 @@ class Map {
 		for (let y = 0; y < rawMap.length; y++) {
 			this.map[y] = new Array(rawMap[y].length);
 			for (let x = 0; x < rawMap[y].length; x++) {
-				this.map[y][x] = transformTile(rawMap[y][x]);
+				this.map[y][x] = RAW_TILES[rawMap[y][x]].transform();
 			}
 		}
 	}
@@ -394,7 +480,7 @@ const BlUE_KEY = new KeyConfiguration("#00ccff", false, new RemoveLock2());
 let player = new Player();
 let map = new Map();
 
-let rawMap: RawTile[][] = [
+let rawMap: number[][] = [
 	[2, 2, 2, 2, 2, 2, 2, 2],
 	[2, 3, 0, 1, 1, 2, 0, 2],
 	[2, 4, 2, 6, 1, 2, 0, 2],
@@ -402,26 +488,6 @@ let rawMap: RawTile[][] = [
 	[2, 4, 1, 1, 1, 9, 0, 2],
 	[2, 2, 2, 2, 2, 2, 2, 2],
 ];
-function assertExhausted(x: never): never {
-	throw new Error("Unexpected object: " + x);
-}
-function transformTile(tile: RawTile) {
-	switch (tile) {
-		case RawTile.AIR: return new Air();
-		case RawTile.PLAYER: return new PlayerTile();
-		case RawTile.UNBREAKABLE: return new Unbreakable();
-		case RawTile.STONE: return new Stone(new Resting());
-		case RawTile.FALLING_STONE: return new Stone(new Falling());
-		case RawTile.BOX: return new Box(new Resting());
-		case RawTile.FALLING_BOX: return new Box(new Falling());
-		case RawTile.FLUX: return new Flux();
-		case RawTile.KEY1: return new GameKey(YELLOW_KEY);
-		case RawTile.LOCK1: return new GameLock(YELLOW_KEY);
-		case RawTile.KEY2: return new GameKey(YELLOW_KEY);
-		case RawTile.LOCK2: return new GameLock(YELLOW_KEY);
-		default: assertExhausted(tile);
-	}
-}
 
 let inputs: Input[] = [];
 
